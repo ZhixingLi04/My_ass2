@@ -39,19 +39,22 @@ class MainActivity5 : ComponentActivity() {
 
 data class Message(val sender: String, val text: String)
 
-val chatMessages = listOf(
-    Message("Dad", "Had a great lunch today!"),
-    Message("Mom", "Don't forget to take your medicine at 6 PM!"),
-    Message("Me", "Got it, thanks!"),
-    Message("Son", "I will visit this weekend!"),
-    Message("Me", "Looking forward to it!"),
-    Message("Daughter", "Sent you some new pictures!"),
-    Message("Grandson", "Love you grandpa! ❤️")
-)
-
 @Composable
 fun FamilyCommunicationScreen(navController: NavController, modifier: Modifier = Modifier) {
     var inputText by remember { mutableStateOf(TextFieldValue("")) }
+
+    // 用 mutableStateListOf 来存储聊天信息
+    val messages = remember {
+        mutableStateListOf(
+            Message("Dad", "Had a great lunch today!"),
+            Message("Mom", "Don't forget to take your medicine at 6 PM!"),
+            Message("Me", "Got it, thanks!"),
+            Message("Son", "I will visit this weekend!"),
+            Message("Me", "Looking forward to it!"),
+            Message("Daughter", "Sent you some new pictures!"),
+            Message("Grandson", "Love you grandpa! ❤️")
+        )
+    }
 
     Column(
         modifier = modifier
@@ -70,7 +73,7 @@ fun FamilyCommunicationScreen(navController: NavController, modifier: Modifier =
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(chatMessages) { message ->
+            items(messages) { message ->
                 ChatBubble(message)
             }
         }
@@ -93,7 +96,13 @@ fun FamilyCommunicationScreen(navController: NavController, modifier: Modifier =
                     .padding(8.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = { /* 发送消息逻辑 */ }) {
+            Button(onClick = {
+                val text = inputText.text.trim()
+                if (text.isNotEmpty()) {
+                    messages.add(Message("Me", text))
+                    inputText = TextFieldValue("") // 清空输入框
+                }
+            }) {
                 Text("Send")
             }
         }

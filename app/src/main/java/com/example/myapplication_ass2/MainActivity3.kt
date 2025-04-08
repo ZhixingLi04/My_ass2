@@ -78,31 +78,39 @@ fun MainActivity3(navController: NavController, modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(onClick = {
-                val calendar = Calendar.getInstance()
-                TimePickerDialog(
-                    context,
-                    { _, hour, minute ->
-                        time = String.format("%02d:%02d", hour, minute)
-                    },
-                    calendar.get(Calendar.HOUR_OF_DAY),
-                    calendar.get(Calendar.MINUTE),
-                    true
-                ).show()
-            }) {
+            // Time Picker Button - 居中
+            Button(
+                onClick = {
+                    val calendar = Calendar.getInstance()
+                    TimePickerDialog(
+                        context,
+                        { _, hour, minute ->
+                            time = String.format("%02d:%02d", hour, minute)
+                        },
+                        calendar.get(Calendar.HOUR_OF_DAY),
+                        calendar.get(Calendar.MINUTE),
+                        true
+                    ).show()
+                },
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
                 Text(time)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(onClick = {
-                if (name.isNotBlank() && description.isNotBlank() && time != "Select Time") {
-                    tasks.add(RoutineTask(name, description, time))
-                    name = ""
-                    description = ""
-                    time = "Select Time"
-                }
-            }) {
+            // Add Task Button - 居中
+            Button(
+                onClick = {
+                    if (name.isNotBlank() && description.isNotBlank() && time != "Select Time") {
+                        tasks.add(RoutineTask(name, description, time))
+                        name = ""
+                        description = ""
+                        time = "Select Time"
+                    }
+                },
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
                 Text("Add Task")
             }
 

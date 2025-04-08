@@ -6,13 +6,16 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,8 +35,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplication_ass2Theme {
                 val navController = rememberNavController()
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    NavHostContainer(navController = navController, modifier = Modifier.padding(innerPadding))
+                Scaffold(
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
+                    NavHostContainer(
+                        navController = navController,
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }
@@ -47,63 +55,102 @@ fun NavHostContainer(navController: NavHostController, modifier: Modifier = Modi
         composable("medication") { MainActivity2(navController) }
         composable("daily_routine") { MainActivity3(navController) }
         composable("appointments") { DailyRoutineScreen(navController) }
-        composable("communication") { FamilyCommunicationScreen(navController) } // 添加 Family Communication 页面
+        composable("communication") { FamilyCommunicationScreen(navController) }
+        composable("settings") { SettingsScreen(navController) }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavHostController, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.fillMaxSize()
     ) {
+        // Background image
         Image(
             painter = painterResource(id = R.drawable.a),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            alpha = 0.6f
+        )
+
+        // Gradient overlay to improve readability
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color.White.copy(alpha = 0.6f), Color.White.copy(alpha = 0.3f))
+                    )
+                )
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
         ) {
+            TopAppBar(
+                title = {
+                    Text("Elderly Care", fontWeight = FontWeight.Bold)
+                },
+                colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.White.copy(alpha = 0.9f))
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Text(
                 text = "Welcome to Elderly Care!",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 26.sp
                 ),
-                color = Color.Black
+                color = Color(0xFF333333),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             val options = listOf(
-                "Medication Schedule" to "medication",
-                "Daily Routine Schedule" to "daily_routine",
-                "Appointments List" to "appointments",
-                "Family Communication" to "communication",
-                "App Settings" to "settings"
+                Triple("Medication Schedule", "medication", Icons.Default.Menu),
+                Triple("Daily Routine Schedule", "daily_routine", Icons.Default.Settings),
+                Triple("Appointments List", "appointments", Icons.Default.Edit),
+                Triple("Family Communication", "communication", Icons.Default.Phone),
+                Triple("App Settings", "settings", Icons.Default.Settings)
             )
 
-            options.forEach { (text, route) ->
-                OutlinedButton(
-                    onClick = { navController.navigate(route) },
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .background(Color.Transparent)
-                        .border(1.dp, Color.White, RoundedCornerShape(8.dp))
-                ) {
-                    Text(
-                        text = text,
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                options.forEach { (text, route, icon) ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth(0.9f)
+                            .padding(vertical = 8.dp)
+                            .height(60.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        onClick = { navController.navigate(route) }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(icon, contentDescription = null, tint = Color(0xFF4A4A4A))
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = text,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }

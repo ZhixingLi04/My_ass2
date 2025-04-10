@@ -8,19 +8,26 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.myapplication_ass2.ui.theme.MyApplication_ass2Theme
+
+data class Message(val sender: String, val text: String)
 
 class MainActivity5 : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,32 +36,37 @@ class MainActivity5 : ComponentActivity() {
         setContent {
             MyApplication_ass2Theme {
                 val navController = rememberNavController()
+                val messages = remember {
+                    mutableStateListOf(
+                        Message("Dad", "Had a great lunch today!"),
+                        Message("Mom", "Don't forget to take your medicine at 6 PM!"),
+                        Message("Me", "Got it, thanks!"),
+                        Message("Son", "I will visit this weekend!"),
+                        Message("Me", "Looking forward to it!"),
+                        Message("Daughter", "Sent you some new pictures!"),
+                        Message("Grandson", "Love you grandpa! ❤️")
+                    )
+                }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    FamilyCommunicationScreen(navController, modifier = Modifier.padding(innerPadding))
+                    FamilyCommunicationScreen(
+                        navController = navController,
+                        messages = messages,
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }
     }
 }
 
-data class Message(val sender: String, val text: String)
-
 @Composable
-fun FamilyCommunicationScreen(navController: NavController, modifier: Modifier = Modifier) {
+fun FamilyCommunicationScreen(
+    navController: NavController,
+    messages: MutableList<Message>,
+    modifier: Modifier = Modifier
+) {
     var inputText by remember { mutableStateOf(TextFieldValue("")) }
-
-    // 用 mutableStateListOf 来存储聊天信息
-    val messages = remember {
-        mutableStateListOf(
-            Message("Dad", "Had a great lunch today!"),
-            Message("Mom", "Don't forget to take your medicine at 6 PM!"),
-            Message("Me", "Got it, thanks!"),
-            Message("Son", "I will visit this weekend!"),
-            Message("Me", "Looking forward to it!"),
-            Message("Daughter", "Sent you some new pictures!"),
-            Message("Grandson", "Love you grandpa! ❤️")
-        )
-    }
 
     Column(
         modifier = modifier
@@ -64,57 +76,77 @@ fun FamilyCommunicationScreen(navController: NavController, modifier: Modifier =
         Text(
             text = "Family Communication",
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(bottom = 12.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Divider(color = Color.Gray.copy(alpha = 0.3f))
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            reverseLayout = true
         ) {
-            items(messages) { message ->
+            items(messages.asReversed()) { message ->
                 ChatBubble(message)
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             BasicTextField(
                 value = inputText,
                 onValueChange = { inputText = it },
+                singleLine = true,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(8.dp)
-                    .background(Color.LightGray)
-                    .padding(8.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color(0xFFF0F0F0))
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             )
+
             Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = {
-                val text = inputText.text.trim()
-                if (text.isNotEmpty()) {
-                    messages.add(Message("Me", text))
-                    inputText = TextFieldValue("") // 清空输入框
-                }
-            }) {
-                Text("Send")
+
+            IconButton(
+                onClick = {
+                    val text = inputText.text.trim()
+                    if (text.isNotEmpty()) {
+                        messages.add(Message("Me", text))
+                        inputText = TextFieldValue("")
+                    }
+                },
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(24.dp))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = "Send",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Button(
             onClick = { navController.navigate("home") },
             modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text("Home", fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimary)
+            Text("Back to Home", fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }
@@ -122,32 +154,32 @@ fun FamilyCommunicationScreen(navController: NavController, modifier: Modifier =
 @Composable
 fun ChatBubble(message: Message) {
     val isMe = message.sender == "Me"
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start
     ) {
-        Card(
+        Column(
             modifier = Modifier
-                .padding(4.dp)
-                .background(Color.Transparent),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isMe) Color(0xFFBBDEFB) else MaterialTheme.colorScheme.surfaceVariant
-            )
+                .widthIn(max = 280.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(
+                    if (isMe) Color(0xFFBBDEFB)
+                    else MaterialTheme.colorScheme.surfaceVariant
+                )
+                .padding(12.dp)
         ) {
+            if (!isMe) {
+                Text(
+                    text = message.sender,
+                    style = MaterialTheme.typography.labelSmall.copy(color = Color.Gray)
+                )
+            }
             Text(
-                text = "${if (isMe) "" else message.sender + ": "}${message.text}",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(16.dp)
+                text = message.text,
+                style = MaterialTheme.typography.bodyMedium
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FamilyCommunicationScreenPreview() {
-    MyApplication_ass2Theme {
-        val navController = rememberNavController()
-        FamilyCommunicationScreen(navController)
     }
 }

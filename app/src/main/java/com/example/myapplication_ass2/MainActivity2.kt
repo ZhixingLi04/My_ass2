@@ -1,21 +1,25 @@
 package com.example.myapplication_ass2
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.myapplication_ass2.ui.theme.MyApplication_ass2Theme
 
 data class Medication(
     val name: String,
@@ -24,7 +28,11 @@ data class Medication(
 )
 
 @Composable
-fun MainActivity2(navController: NavController, modifier: Modifier = Modifier) {
+fun MainActivity2(
+    navController: NavController,
+    checkedStates: MutableList<Boolean>,
+    modifier: Modifier = Modifier
+) {
     val medications = listOf(
         Medication("Aspirin", "1 tablet", "8:00 AM"),
         Medication("Metformin", "500mg", "12:00 PM"),
@@ -33,74 +41,118 @@ fun MainActivity2(navController: NavController, modifier: Modifier = Modifier) {
     )
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = modifier.fillMaxSize()
     ) {
         Image(
             painter = painterResource(id = R.drawable.b),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize()
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(0.2f)
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
-                .align(Alignment.Center)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Medication Schedule",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentWidth(Alignment.CenterHorizontally)
-                    .padding(bottom = 16.dp)
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(medications) { medication ->
-                    MedicationCard(medication)
+                itemsIndexed(medications) { index, medication ->
+                    AnimatedVisibility(
+                        visible = !checkedStates[index],
+                        exit = fadeOut(animationSpec = tween(500)) + shrinkVertically(animationSpec = tween(500))
+                    ) {
+                        MedicationCard(
+                            medication = medication,
+                            onDone = { checkedStates[index] = true }
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Button(
-                onClick = { navController.navigate("home") }, // 返回 HomeScreen
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                onClick = { navController.navigate("home") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
             ) {
-                Text("Home", fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimary)
+                Text(
+                    "Back to Home",
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
     }
 }
 
 @Composable
-fun MedicationCard(medication: Medication) {
+fun MedicationCard(
+    medication: Medication,
+    onDone: () -> Unit
+) {
+    var isClicked by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = medication.name, style = MaterialTheme.typography.titleMedium)
-            Text(text = "Dosage: ${medication.dosage}", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Time: ${medication.time}", style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = medication.name,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = "Dosage: ${medication.dosage}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Time: ${medication.time}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
-@Preview(showBackground = true)
-@Composable
-fun MedicationScreenPreview() {
-    MyApplication_ass2Theme {
-        val navController = rememberNavController()
-        MainActivity2(navController)
+            Button(
+                onClick = {
+                    isClicked = true
+                    onDone()
+                },
+                modifier = Modifier.padding(start = 12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)) // ✅ 绿色按钮
+            ) {
+                Text("Done")
+            }
+        }
     }
 }

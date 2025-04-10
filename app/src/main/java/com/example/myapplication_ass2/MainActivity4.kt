@@ -4,16 +4,28 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessAlarm
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -27,97 +39,148 @@ class MainActivity4 : ComponentActivity() {
         setContent {
             MyApplication_ass2Theme {
                 val navController = rememberNavController()
+                // 记忆支持任务状态
+                val routineTasks = remember {
+                    mutableStateListOf(
+                        "07:00 - Wake up & light stretching",
+                        "07:30 - Wash up & healthy breakfast",
+                        "08:30 - Morning walk (outdoor or balcony)",
+                        "10:00 - Reading / Puzzle / Brain exercise",
+                        "12:00 - Healthy lunch (low salt, balanced)",
+                        "13:00 - Nap (30–45 mins)",
+                        "14:00 - Light activity (Tai Chi / gardening)",
+                        "16:00 - Family video call / watch TV",
+                        "18:00 - Dinner (light & easy to digest)",
+                        "20:00 - Listen to music / reading",
+                        "21:30 - Get ready for bed",
+                        "22:00 - Sleep (consistent schedule)"
+                    )
+                }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    DailyRoutineScreen(navController, modifier = Modifier.padding(innerPadding))
+                    DailyRoutineScreen(
+                        navController = navController,
+                        taskList = routineTasks,
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }
     }
 }
 
-val routineData = listOf(
-    "08:00 - Breakfast",
-    "09:30 - Morning Walk in the Park",
-    "12:00 - Lunch at Sister's House",
-    "14:00 - Afternoon Nap",
-    "16:00 - Watching TV",
-    "18:00 - Dinner",
-    "20:00 - Video Call with Family",
-    "22:00 - Sleep"
-)
-
 @Composable
-fun DailyRoutineScreen(navController: NavController, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+fun DailyRoutineScreen(
+    navController: NavController,
+    taskList: MutableList<String>,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        // Background image
         Image(
-            painter = painterResource(id = R.drawable.b), // Background image
+            painter = painterResource(id = R.drawable.b),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            alpha = 0.2f
         )
-
+        // White gradient overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.9f),
+                            Color.White.copy(alpha = 0.3f)
+                        )
+                    )
+                )
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
-                .align(Alignment.Center)
+                .padding(20.dp)
         ) {
             Text(
-                text = "Daily Routine Schedule",
-                style = MaterialTheme.typography.headlineMedium,
+                text = "Doctor-Recommended Daily Routine",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentWidth(Alignment.CenterHorizontally)
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 16.dp)
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(routineData) { routine ->
-                    RoutineCard(routine)
+                itemsIndexed(taskList) { index, task ->
+                    RoutineCard(task) { taskList.removeAt(index) }
                 }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
-
             Button(
-                onClick = { navController.navigate("home") },  // 让按钮回到 home
+                onClick = { navController.navigate("home") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Home", fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimary)
+                Text("Back to Home", fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimary)
             }
         }
     }
 }
 
 @Composable
-fun RoutineCard(routine: String) {
+fun RoutineCard(routine: String, onDone: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Text(
-            text = routine,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(16.dp)
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DailyRoutineScreenPreview() {
-    MyApplication_ass2Theme {
-        val navController = rememberNavController()
-        DailyRoutineScreen(navController)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 左侧任务描述区域
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AccessAlarm,
+                    contentDescription = "Time Icon",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = routine,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp)
+                )
+            }
+            // 右侧 "Done" 按钮
+            OutlinedButton(
+                onClick = onDone,
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, SolidColor(MaterialTheme.colorScheme.primary)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                modifier = Modifier.height(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Done",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Done", style = MaterialTheme.typography.labelMedium)
+            }
+        }
     }
 }

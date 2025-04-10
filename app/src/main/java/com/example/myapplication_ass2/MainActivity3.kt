@@ -2,21 +2,25 @@ package com.example.myapplication_ass2
 
 import android.app.TimePickerDialog
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.myapplication_ass2.ui.theme.MyApplication_ass2Theme
 import java.util.*
 
 data class RoutineTask(
@@ -26,9 +30,12 @@ data class RoutineTask(
 )
 
 @Composable
-fun MainActivity3(navController: NavController, modifier: Modifier = Modifier) {
+fun MainActivity3(
+    navController: NavController,
+    tasks: MutableList<RoutineTask>,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
-    val tasks = remember { mutableStateListOf<RoutineTask>() }
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var time by remember { mutableStateOf("Select Time") }
@@ -36,49 +43,48 @@ fun MainActivity3(navController: NavController, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
     ) {
         Image(
             painter = painterResource(id = R.drawable.b),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(0.2f)
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
             Text(
                 text = "Daily Routine Schedule",
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentWidth(Alignment.CenterHorizontally)
-                    .padding(bottom = 16.dp)
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 12.dp)
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Task Name") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                shape = RoundedCornerShape(12.dp)
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Description") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                shape = RoundedCornerShape(12.dp)
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Time Picker Button - 居中
             Button(
                 onClick = {
                     val calendar = Calendar.getInstance()
@@ -94,12 +100,11 @@ fun MainActivity3(navController: NavController, modifier: Modifier = Modifier) {
                 },
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             ) {
-                Text(time)
+                Text(text = time)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Add Task Button - 居中
             Button(
                 onClick = {
                     if (name.isNotBlank() && description.isNotBlank() && time != "Select Time") {
@@ -109,21 +114,28 @@ fun MainActivity3(navController: NavController, modifier: Modifier = Modifier) {
                         time = "Select Time"
                     }
                 },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally),
+                shape = RoundedCornerShape(12.dp)
             ) {
+                Icon(Icons.Default.Add, contentDescription = "Add")
+                Spacer(modifier = Modifier.width(8.dp))
                 Text("Add Task")
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f),
+                    .weight(1f)
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(tasks) { task ->
-                    RoutineCard(task)
+                itemsIndexed(tasks) { index, task ->
+                    RoutineCard(
+                        task = task,
+                        onDelete = { tasks.removeAt(index) }
+                    )
                 }
             }
 
@@ -132,33 +144,38 @@ fun MainActivity3(navController: NavController, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("Home", fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimary)
+                Text("Back to Home", fontSize = 18.sp, color = MaterialTheme.colorScheme.onPrimary)
             }
         }
     }
 }
 
 @Composable
-fun RoutineCard(task: RoutineTask) {
+fun RoutineCard(task: RoutineTask, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = task.name, style = MaterialTheme.typography.titleMedium)
-            Text(text = "Description: ${task.description}", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Time: ${task.time}", style = MaterialTheme.typography.bodyMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(task.name, style = MaterialTheme.typography.titleMedium)
+                    Text("Description: ${task.description}", style = MaterialTheme.typography.bodyMedium)
+                    Text("Time: ${task.time}", style = MaterialTheme.typography.bodyMedium)
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RoutineScreenPreview() {
-    MyApplication_ass2Theme {
-        val navController = rememberNavController()
-        MainActivity3(navController)
     }
 }
